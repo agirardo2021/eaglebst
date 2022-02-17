@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+
+        <record id="wizard_sale_tax_report" model="ir.ui.view">
+            <field name="name">sale.tax.report</field>
+            <field name="model">sale.tax.report</field>
+            <field name="arch" type="xml">
+                <form string="Sale Tax Report">
+                    <group col="4">
+                        <field name="from_date"/>
+                        <field name="to_date"/>
+                        <field name="tax_ids" widget="many2many_tags"
+                               options="{'no_create': True, 'no_open': True}"/>
+                        <field name="state_ids" widget="many2many_tags"
+                               options="{'no_create': True, 'no_open': True}"/>
+                    </group>
+                    <footer>
+                        <button name='print_report' string="Print"
+                                type="object" style="color : white;background-color : #017e84;"/>
+                    </footer>
+                </form>
+            </field>
+        </record>
+
+        <record id="action_tax_report_by_state" model="ir.actions.act_window">
+            <field name="name">Sale Tax Report</field>
+            <field name="res_model">sale.tax.report</field>
+            <field name="view_mode">form</field>
+            <field name="target">new</field>
+        </record>
+
+        <menuitem id="menu_custom_report" name="Custom Report" sequence="5" parent="account.menu_finance"/>
+        <menuitem id="menu_sale_tax_report" name="Sale Tax Report"
+                  sequence="1" action="action_tax_report_by_state" parent="aspl_sale_tax_report_ee.menu_custom_report"/>
+
+    </data>
+</odoo>

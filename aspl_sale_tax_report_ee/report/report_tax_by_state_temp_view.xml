@@ -1,0 +1,241 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <data>
+        <template id="report_tax_by_state_temp">
+            <t t-call="web.html_container">
+                <t t-call="web.external_layout">
+                    <t t-foreach="doc_ids" t-as="o">
+                        <div class="page" style="font-size:11px;">
+                            <h3 class="text-center text-primary">
+                                <center>Sale Tax Report</center>
+                            </h3>
+                            <table class="table table-bordered" style="font-size:15px">
+                                <thead>
+                                    <tr>
+                                        <td>
+                                            <center>
+                                                <b>From Date</b>
+                                            </center>
+                                        </td>
+                                        <td>
+                                            <center>
+                                                <b>To Date</b>
+                                            </center>
+                                        </td>
+                                        <td>
+                                            <center>
+                                                <b>Taxes</b>
+                                            </center>
+                                        </td>
+                                        <td>
+                                            <center>
+                                                <b>States</b>
+                                            </center>
+                                        </td>
+                                    </tr>
+                                </thead>
+                                <tr>
+                                    <td>
+                                        <center>
+                                            <span t-field="o.from_date"/>
+                                        </center>
+                                    </td>
+                                    <td>
+                                        <center>
+                                            <span t-field="o.to_date"/>
+                                        </center>
+                                    </td>
+                                    <td>
+                                        <center>
+                                            <t t-if="o.tax_ids">
+                                                <span t-esc="', '.join(map(lambda x: (x.name), o.tax_ids))"/>
+                                            </t>
+                                        </center>
+                                    </td>
+                                    <td>
+                                        <center>
+                                            <t t-if="o.state_ids">
+                                                <span t-esc="', '.join(map(lambda x: (x.name), o.state_ids))"/>
+                                            </t>
+                                        </center>
+                                    </td>
+                                </tr>
+                            </table>
+                            <t t-foreach="get_data(o)" t-as="data">
+                                <t t-if="data">
+                                <br/>
+                                <br/>
+                                <strong style="font-size:15px">
+                                    <b>State:</b>
+                                    <span t-esc="request.env['res.country.state'].browse(data).name" style="font-size:15px;"/>
+                                </strong>
+                                <br/>
+                                <br/>
+                                <t t-set="total_state_invoice" t-value="0"/>
+                                <t t-foreach="data_value" t-as="data1">
+                                    <strong style="font-size:15px">
+                                        <b>Tax Name:</b>
+                                        <t t-if="data1 != 'NA'">
+                                            <span t-esc="request.env['account.tax'].search([('id', '=',int(data1))]).name" style="font-size:15px;"/>
+                                        </t>
+                                        <t t-if="data1 == 'NA'">
+                                         NA
+                                        </t>
+                                    </strong>
+                                    <br/>
+                                    <br/>
+                                    <t t-set="total_product_sales" t-value="0"/>
+                                    <t t-set="total_tax" t-value="0"/>
+                                    <t t-set="total_invoice" t-value="0"/>
+                                    <table class="table" style="font-size:11px">
+                                    <thead>
+                                        <tr>
+                                            <td style="width:auto !important;" class="autowidth">
+                                                <b>Invoice</b>
+                                            </td>
+                                            <td style="width:auto !important;" class="autowidth">
+                                                <b>Invoice Date</b>
+                                            </td>
+                                            <td style="width:auto !important;" class="autowidth">
+                                                <b>Partner</b>
+                                            </td>
+                                            <td style="width:auto !important;" class="autowidth">
+                                                <b>City (Delivery Address)</b>
+                                            </td>
+                                            <t t-if="data1 != 'NA'">
+                                                <td style="text-align:right;" class="autowidth">
+                                                    <b>Product Sales</b>
+                                                </td>
+                                                <td style="text-align:right;" class="autowidth">
+                                                    <b>Total Tax</b>
+                                                </td>
+                                                <td style="text-align:right;" class="autowidth">
+                                                    <b>Tax Rate</b>
+                                                </td>
+                                            </t>
+                                            <td style="text-align:right;" class="autowidth">
+                                                <b>Total Invoice</b>
+                                            </td>
+                                        </tr>
+                                    </thead>
+                                    <tr t-foreach="data1_value" t-as="result">
+                                        <td style="width:auto !important;" class="autowidth">
+                                            <t t-esc="result['invoice']"/>
+                                        </td>
+                                        <td style="width:auto !important;" class="autowidth">
+                                            <span t-esc="result['invoice_date']"/>
+                                        </td>
+                                        <td style="width:auto !important;" class="autowidth">
+                                            <t t-esc="result['partner']"/>
+                                        </td>
+                                        <td style="width:auto !important;" class="autowidth">
+                                            <t t-if="result['city']">
+                                            <span t-esc="request.env['res.partner'].search([('id', '=',int(result['city']))]).city" style="font-size:11px;"/>
+                                            </t>
+                                        </td>
+                                        <t t-if="data1 != 'NA'">
+                                            <td style="text-align:right;">
+                                                <t t-esc="result['product_sales']"
+                                                   t-options='{"widget": "monetary", "display_currency": o.company_id.currency_id}'/>
+                                                <t t-set="total_product_sales"
+                                                   t-value="total_product_sales + result['product_sales']"/>
+                                            </td>
+                                            <td style="text-align:right;">
+                                                <t t-esc="result['total_tax']"
+                                                   t-options='{"widget": "monetary", "display_currency": o.company_id.currency_id}'/>
+                                                <t t-set="total_tax" t-value="total_tax + result['total_tax']"/>
+                                            </td>
+                                            <td style="text-align:right;">
+                                                <t t-esc="result['tax_rate']"/>%
+                                            </td>
+                                        </t>
+                                        <td style="text-align:right;">
+                                            <t t-esc="result['total_invoice']"
+                                               t-options='{"widget": "monetary", "display_currency": o.company_id.currency_id}'/>
+                                            <t t-set="total_invoice" t-value="total_invoice + result['total_invoice']"/>
+                                            <t t-set="total_state_invoice" t-value="total_state_invoice + result['total_invoice']"/>
+                                        </td>
+                                    </tr>
+                                    <tr class="border-black">
+                                        <td>
+                                            <strong style="font-size:11px">
+                                                <b>
+                                                    <t t-if="data1 != 'NA'">
+                                                        Total Of:
+                                                        <span t-esc="request.env['account.tax'].search([('id', '=',int(data1))]).name" style="font-size:11px;"/>
+                                                    </t>
+                                                    <t t-if="data1 == 'NA'">
+                                                      Total of Invoices of Without Taxes
+                                                    </t>
+                                                </b>
+                                            </strong>
+                                        </td>
+                                        <td></td>
+                                        <td></td>
+                                        <td></td>
+                                        <t t-if="data1 != 'NA'">
+                                            <td style="text-align:right;">
+                                                <strong>
+                                                    <b>
+                                                        <span t-esc="total_product_sales"
+                                                              t-options='{"widget": "monetary", "display_currency": o.company_id.currency_id}'
+                                                              style="font-size:11px"/>
+                                                    </b>
+                                                </strong>
+                                            </td>
+                                            <td style="text-align:right;">
+                                                <strong>
+                                                    <b>
+                                                        <span t-esc="total_tax"
+                                                              t-options='{"widget": "monetary", "display_currency": o.company_id.currency_id}'
+                                                              style="font-size:11px"/>
+                                                    </b>
+                                                </strong>
+                                            </td>
+                                            <td></td>
+                                        </t>
+                                        <td style="text-align:right;">
+                                            <strong>
+                                                <b>
+                                                    <span t-esc="total_invoice"
+                                                          t-options='{"widget": "monetary", "display_currency": o.company_id.currency_id}'
+                                                          style="font-size:11px"/>
+                                                </b>
+                                            </strong>
+                                        </td>
+                                    </tr>
+                                </table>
+                                </t>
+                                <table class="table" style="font-size:11px">
+                                    <thead>
+                                        <tr>
+                                        <td style="width:85%;">
+                                            <strong style="font-size:15px">
+                                                <b>
+                                                   Total of all Invoices for <span t-esc="request.env['res.country.state'].browse(data).name" style="font-size:15px;"/>
+                                                </b>
+                                            </strong>
+                                        </td>
+                                        <td style="text-align:right;width:15%;">
+                                            <strong>
+                                                <b>
+                                                    <span t-esc="total_state_invoice"
+                                                          t-options='{"widget": "monetary", "display_currency": o.company_id.currency_id}'
+                                                          style="font-size:15px"/>
+                                                </b>
+                                            </strong>
+                                        </td>
+                                    </tr>
+                                    </thead>
+                                </table>
+<!--                                <p style="page-break-before:always;"></p>-->
+                                </t>
+                            </t>
+                        </div>
+                    </t>
+                </t>
+            </t>
+        </template>
+
+    </data>
+</odoo>
